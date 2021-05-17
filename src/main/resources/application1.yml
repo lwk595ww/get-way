@@ -1,0 +1,56 @@
+server:
+  port: 9001
+
+spring:
+  application:
+    name: gateway
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1：8848
+    #配置sentinel dashboard 管理后台
+    sentinel:
+      transport:
+        dashboard: 127.0.0.1:8080
+        port: 8719
+      filter: #sentinel 对过滤器的支持
+        enabled: true
+    gateway:
+      discovery:
+        locator:
+          enabled: true #开启注册中心的服务与发现
+          lower-case-service-id: true
+      routes:
+        - id: geteway-test01  # 唯一表示id 没有实际的作用 一般都写成对应服务的名称
+          uri: lb://spingcloud-demo1  # lb代表负载均衡方式  spingcloud-demo1 表示注册中心的服务名称
+          predicates:    # 匹配这个路由的地址 (断言)
+          - Path=/v1/**
+          filters:
+        # - StripPrefix=1 #StripPrefix=1 表示会将第一个/下面的第一个路径去掉  例如： /test/v1/** 加上这个配置后 实际就会变成 /v1/**
+        - id: repair-report
+          uri: lb://repair-report  # lb代表负载均衡方式  spingcloud-demo1 表示注册中心的服务名称
+          predicates:    # 匹配这个路由的地址
+          - Path=/rep/**
+          filters:
+      globalcors: # 对于 get post put delete 设置跨越
+        corsConfigurations:
+          '[/**]':
+            maxAge: 1800
+            allowedOrigins: "*"
+            allowCredentials: true
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+
+#监控平台 暴露所有的接口
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
